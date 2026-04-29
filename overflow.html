@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overflow — A P5 Sketch</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-shadow: #e6dcc8;
+    --ink: #2a2a2a;
+    --blue: #6A99B2;
+    --kid: #c97a5d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 1rem;
+    min-height: 100vh;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 1rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 2rem;
+    color: var(--ink);
+    margin-bottom: 0.2rem;
+  }
+  .subtitle {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--blue);
+  }
+  #canvas-wrap {
+    max-width: 600px;
+    margin: 0 auto;
+    border: 0.5px solid var(--paper-shadow);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    background: var(--paper);
+  }
+  #canvas-wrap canvas { display: block; }
+  .controls {
+    max-width: 600px;
+    margin: 1rem auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--ink);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  button {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    background: transparent;
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    padding: 0.3rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  button:hover {
+    background: var(--blue);
+    color: var(--paper);
+  }
+  .instruction {
+    font-style: italic;
+    color: var(--blue);
+    font-size: 0.85rem;
+  }
+  .back {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  .back a {
+    font-family: 'Caveat', cursive;
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--blue);
+    font-size: 1.05rem;
+  }
+  .back a:hover { color: var(--kid); border-color: var(--kid); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Overflow</h1>
+  <div class="subtitle">click the canvas. the words will not stop.</div>
+</header>
+
+<div id="canvas-wrap"></div>
+
+<div class="controls">
+  <span class="instruction">click anywhere on the canvas to add a word</span>
+  <button onclick="clearCanvas()">try to clear it</button>
+</div>
+
+<div class="back">
+  <a href="index.html">← back to the mental load</a>
+</div>
+
+<script>
+  // The vocabulary of the mental load — drawn from Exercise Ten's text-click sketch
+  const words = [
+    "work", "mom", "cook", "clean", "laundry", "dishes",
+    "groceries", "school", "homework", "deadlines", "meetings",
+    "daycare", "bedtime", "lunchboxes", "carpools", "bills",
+    "budget", "email", "readings", "papers", "repeat", "tired",
+    "overwhelmed", "trying", "enough", "breathe", "survive",
+    "schedule", "multitask", "invisible", "remember", "remind",
+    "notice", "anticipate", "manage", "track", "plan", "reschedule",
+    "apologize", "explain", "wait", "again"
+  ];
+
+  // Palette pulled from your pie chart
+  const palette = [
+    [106, 153, 178],   // blue
+    [143, 188, 169],   // sage
+    [177, 166, 199],   // lavender
+    [129, 168, 166],   // teal
+    [180, 200, 210],   // mist
+    [196, 188, 210],   // warm
+    [201, 122, 93]     // kid orange (rare, like an interruption)
+  ];
+
+  let placedWords = [];
+  let canvasW = 600;
+  let canvasH = 500;
+  let autoSpawnTimer = 0;
+  let bgGrain;
+
+  function setup() {
+    // Responsive width
+    const wrap = document.getElementById('canvas-wrap');
+    canvasW = Math.min(600, wrap.offsetWidth || 600);
+    const cnv = createCanvas(canvasW, canvasH);
+    cnv.parent('canvas-wrap');
+    textFont('Crimson Pro');
+    background(244, 237, 224);
+    drawGrain();
+  }
+
+  function drawGrain() {
+    // subtle paper texture
+    noStroke();
+    for (let i = 0; i < 200; i++) {
+      fill(0, random(3, 8));
+      circle(random(width), random(height), random(0.5, 1.5));
+    }
+  }
+
+  function draw() {
+    // Each frame: draw all placed words with slight breathing motion
+    background(244, 237, 224, 12); // very slight fade so old words ghost out slowly
+    // (the words DON'T fully clear — the load accumulates)
+
+    for (let w of placedWords) {
+      push();
+      translate(w.x, w.y);
+      rotate(w.rot);
+      textSize(w.size);
+      // gentle breathing
+      let breathe = sin(frameCount * 0.02 + w.phase) * 0.5;
+      fill(w.color[0], w.color[1], w.color[2], w.alpha);
+      text(w.word, breathe, 0);
+      pop();
+    }
+
+    // Auto-spawn: every few seconds, a word appears WITHOUT a click
+    // because interruptions don't wait for permission
+    autoSpawnTimer++;
+    if (autoSpawnTimer > 240 && placedWords.length > 0) {
+      autoSpawnTimer = 0;
+      addWord(random(40, width - 40), random(40, height - 40), true);
+    }
+  }
+
+  function mousePressed() {
+    if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+      addWord(mouseX, mouseY, false);
+    }
+  }
+
+  function mouseDragged() {
+    // Dragging adds a trail of words — like the way one task spawns ten more
+    if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+      if (frameCount % 4 === 0) addWord(mouseX, mouseY, false);
+    }
+  }
+
+  function addWord(x, y, isAutoSpawn) {
+    const w = random(words);
+    // auto-spawned words use the kid-orange more often (the interruption color)
+    const color = isAutoSpawn && random() > 0.4
+      ? palette[6]
+      : random(palette.slice(0, 6));
+    placedWords.push({
+      word: w,
+      x: x,
+      y: y,
+      size: random(14, 26),
+      rot: random(-PI / 12, PI / 12),
+      color: color,
+      alpha: 220,
+      phase: random(TWO_PI),
+      auto: isAutoSpawn
+    });
+
+    // limit: when too many, the oldest fades faster (but doesn't disappear cleanly)
+    if (placedWords.length > 80) {
+      placedWords[0].alpha = max(40, placedWords[0].alpha - 50);
+      if (placedWords[0].alpha < 50) placedWords.shift();
+    }
+  }
+
+  function clearCanvas() {
+    // The "try to clear" button — but it never fully clears
+    // because there's always something left over
+    const remaining = max(3, Math.floor(placedWords.length * 0.15));
+    placedWords = placedWords.slice(-remaining).map(w => ({
+      ...w,
+      alpha: 120
+    }));
+    background(244, 237, 224);
+    drawGrain();
+  }
+
+  function windowResized() {
+    const wrap = document.getElementById('canvas-wrap');
+    canvasW = Math.min(600, wrap.offsetWidth || 600);
+    resizeCanvas(canvasW, canvasH);
+  }
+</script>
+</body>
+</html>

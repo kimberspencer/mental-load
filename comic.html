@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Laundry — A Comic in Four Panels</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4ede0;
+    --paper-shadow: #e6dcc8;
+    --ink: #2a2a2a;
+    --blue: #6A99B2;
+    --sage: #8FBCA9;
+    --lavender: #B1A6C7;
+    --teal: #81A8A6;
+    --mist: #B4C8D2;
+    --warm: #C4BCD2;
+    --kid: #c97a5d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 1rem;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 1rem;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 2rem;
+    color: var(--ink);
+    margin-bottom: 0.2rem;
+  }
+  .subtitle {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--blue);
+  }
+
+  .comic-grid {
+    max-width: 720px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .panel {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    aspect-ratio: 1;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .panel:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+
+  .panel:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  /* SVG inside fills panel */
+  .panel svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .panel-label {
+    position: absolute;
+    top: 0.4rem;
+    left: 0.5rem;
+    font-family: 'Caveat', cursive;
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: var(--paper);
+    padding: 0 0.3rem;
+    z-index: 2;
+  }
+
+  /* Speech / call bubbles */
+  .bubble {
+    position: absolute;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    padding: 0.3rem 0.7rem;
+    font-family: 'Caveat', cursive;
+    font-size: 1rem;
+    border-radius: 16px;
+    z-index: 3;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .bubble.kid { color: var(--kid); }
+  .bubble::after {
+    content: "";
+    position: absolute;
+    width: 0; height: 0;
+  }
+
+  /* the kid-call bubble repeats and stacks */
+  .bubble-1 { top: 8%; right: 6%; transform: rotate(-3deg); }
+  .bubble-2 { top: 18%; right: 14%; transform: rotate(2deg); font-size: 1.15rem; }
+  .bubble-3 { top: 28%; right: 8%; transform: rotate(-5deg); font-size: 1.3rem; }
+  .bubble-4 { top: 38%; right: 16%; transform: rotate(4deg); font-size: 1.45rem; }
+
+  /* Hidden until reveal */
+  .reveal-hidden { opacity: 0; pointer-events: none; }
+  .reveal-shown { opacity: 1; }
+
+  .caption-strip {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 0.5rem 0.8rem;
+    font-family: 'Caveat', cursive;
+    font-size: 1.05rem;
+    text-align: center;
+    margin: 1.5rem auto 0;
+    max-width: 720px;
+    position: relative;
+    min-height: 3rem;
+  }
+  .caption-strip span {
+    display: block;
+    transition: opacity 0.3s;
+  }
+
+  .panel-status {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--blue);
+    font-style: italic;
+    margin-top: 0.8rem;
+  }
+
+  .back {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  .back a {
+    font-family: 'Caveat', cursive;
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--blue);
+    font-size: 1.05rem;
+  }
+  .back a:hover { color: var(--kid); border-color: var(--kid); }
+
+  @media (max-width: 500px) {
+    .comic-grid { gap: 0.4rem; }
+    .bubble { font-size: 0.85rem; padding: 0.2rem 0.5rem; }
+    .bubble-2 { font-size: 0.95rem; }
+    .bubble-3 { font-size: 1.05rem; }
+    .bubble-4 { font-size: 1.15rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Laundry</h1>
+  <div class="subtitle">click each panel — they don't resolve, that's the point</div>
+</header>
+
+<div class="comic-grid" id="grid">
+
+  <!-- PANEL 1 -->
+  <div class="panel" data-panel="1" onclick="advancePanel(1)">
+    <span class="panel-label">i.</span>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- couch -->
+      <rect x="20" y="120" width="160" height="60" fill="#8FBCA9" stroke="#2a2a2a" stroke-width="1.5"/>
+      <rect x="20" y="100" width="160" height="25" fill="#81A8A6" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- figure (mom) -->
+      <circle cx="80" cy="90" r="14" fill="#f4ede0" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 66 100 Q 65 130 70 145 L 95 145 Q 100 130 95 100 Z" fill="#B1A6C7" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- arms folding -->
+      <path d="M 70 110 Q 90 115 110 125" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 95 110 Q 115 120 130 130" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- laundry pile -->
+      <ellipse cx="135" cy="135" rx="28" ry="12" fill="#C4BCD2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="130" cy="125" rx="22" ry="10" fill="#B4C8D2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="138" cy="118" rx="18" ry="8" fill="#6A99B2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- face: tired eyes -->
+      <line x1="74" y1="88" x2="78" y2="88" stroke="#2a2a2a" stroke-width="1.5"/>
+      <line x1="84" y1="88" x2="88" y2="88" stroke="#2a2a2a" stroke-width="1.5"/>
+    </svg>
+    <div class="bubble kid bubble-1 reveal-hidden" data-panel-bubble="1">mom?</div>
+  </div>
+
+  <!-- PANEL 2 -->
+  <div class="panel" data-panel="2" onclick="advancePanel(2)">
+    <span class="panel-label">ii.</span>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="120" width="160" height="60" fill="#8FBCA9" stroke="#2a2a2a" stroke-width="1.5"/>
+      <rect x="20" y="100" width="160" height="25" fill="#81A8A6" stroke="#2a2a2a" stroke-width="1.5"/>
+      <circle cx="80" cy="90" r="14" fill="#f4ede0" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 66 100 Q 64 130 70 148 L 95 148 Q 102 130 95 100 Z" fill="#B1A6C7" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 70 110 Q 88 120 105 125" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 95 110 Q 110 122 125 132" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="135" cy="135" rx="28" ry="12" fill="#C4BCD2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="130" cy="125" rx="22" ry="10" fill="#B4C8D2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="138" cy="118" rx="18" ry="8" fill="#6A99B2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- slightly slumped, eyes a bit down -->
+      <line x1="73" y1="89" x2="78" y2="91" stroke="#2a2a2a" stroke-width="1.5"/>
+      <line x1="84" y1="91" x2="89" y2="89" stroke="#2a2a2a" stroke-width="1.5"/>
+    </svg>
+    <div class="bubble kid bubble-2 reveal-hidden" data-panel-bubble="2">MOM!</div>
+  </div>
+
+  <!-- PANEL 3 -->
+  <div class="panel" data-panel="3" onclick="advancePanel(3)">
+    <span class="panel-label">iii.</span>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="120" width="160" height="60" fill="#8FBCA9" stroke="#2a2a2a" stroke-width="1.5"/>
+      <rect x="20" y="100" width="160" height="25" fill="#81A8A6" stroke="#2a2a2a" stroke-width="1.5"/>
+      <circle cx="80" cy="92" r="14" fill="#f4ede0" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 65 102 Q 62 132 68 150 L 96 150 Q 103 132 96 102 Z" fill="#B1A6C7" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 70 112 Q 85 118 100 122" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 96 112 Q 108 120 120 128" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="135" cy="135" rx="28" ry="12" fill="#C4BCD2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="130" cy="125" rx="22" ry="10" fill="#B4C8D2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="138" cy="118" rx="18" ry="8" fill="#6A99B2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- closed/heavy eyes -->
+      <path d="M 73 91 Q 76 92 79 91" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 84 91 Q 87 92 90 91" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+    </svg>
+    <div class="bubble kid bubble-3 reveal-hidden" data-panel-bubble="3">MOMMY!!</div>
+  </div>
+
+  <!-- PANEL 4 -->
+  <div class="panel" data-panel="4" onclick="advancePanel(4)">
+    <span class="panel-label">iv.</span>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="120" width="160" height="60" fill="#8FBCA9" stroke="#2a2a2a" stroke-width="1.5"/>
+      <rect x="20" y="100" width="160" height="25" fill="#81A8A6" stroke="#2a2a2a" stroke-width="1.5"/>
+      <circle cx="80" cy="93" r="14" fill="#f4ede0" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 64 103 Q 60 134 66 152 L 96 152 Q 104 134 96 103 Z" fill="#B1A6C7" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- arm reaching out toward small kid figure -->
+      <path d="M 70 113 Q 60 120 50 130" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 96 113 Q 110 122 120 128" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- the kid offering a sock -->
+      <circle cx="35" cy="138" r="9" fill="#f4ede0" stroke="#2a2a2a" stroke-width="1.5"/>
+      <path d="M 28 145 Q 27 162 30 170 L 42 170 Q 45 162 42 145 Z" fill="#c97a5d" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- sock -->
+      <path d="M 42 132 Q 50 131 55 134 Q 56 138 50 138 Q 45 137 42 138 Z" fill="#6A99B2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- mom's laundry pile, smaller -->
+      <ellipse cx="138" cy="135" rx="24" ry="10" fill="#C4BCD2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <ellipse cx="135" cy="127" rx="18" ry="8" fill="#B4C8D2" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- small soft eyes -->
+      <line x1="74" y1="91" x2="79" y2="92" stroke="#2a2a2a" stroke-width="1.5"/>
+      <line x1="84" y1="92" x2="89" y2="91" stroke="#2a2a2a" stroke-width="1.5"/>
+      <!-- tiny smile -->
+      <path d="M 76 99 Q 80 102 84 99" fill="none" stroke="#2a2a2a" stroke-width="1.2"/>
+    </svg>
+    <!-- panel 4 has NO speech bubble - the text drops out -->
+    <div class="bubble bubble-4 reveal-hidden" data-panel-bubble="4" style="background: transparent; border: none; color: var(--blue); right: auto; left: 8%; top: 78%;">~ a sock ~</div>
+  </div>
+
+</div>
+
+<div class="caption-strip">
+  <span id="caption">click panel i to begin</span>
+</div>
+
+<div class="panel-status">
+  panels read: <span id="read-count">0</span> / 4
+</div>
+
+<div class="back">
+  <a href="index.html">← back to the mental load</a>
+  <span style="margin: 0 0.6rem; color: var(--paper-shadow);">·</span>
+  <a href="overflow.html">forward to the words →</a>
+</div>
+
+<script>
+  const captions = {
+    1: "i fold while he calls.",
+    2: "i fold while he calls again.",
+    3: "i fold while he calls louder.",
+    4: "the text drops out. he hands me a sock."
+  };
+
+  const readPanels = new Set();
+
+  function advancePanel(n) {
+    const bubble = document.querySelector(`[data-panel-bubble="${n}"]`);
+    if (bubble) {
+      bubble.classList.remove('reveal-hidden');
+      bubble.classList.add('reveal-shown');
+    }
+    document.getElementById('caption').textContent = captions[n];
+    readPanels.add(n);
+    document.getElementById('read-count').textContent = readPanels.size;
+
+    // when all four are read, show closing line
+    if (readPanels.size === 4) {
+      setTimeout(() => {
+        document.getElementById('caption').textContent = "nothing resolves. that is the form.";
+      }, 1800);
+    }
+  }
+</script>
+</body>
+</html>
